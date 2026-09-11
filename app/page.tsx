@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 
-// TÜRKİYE VE DÜNYADAN EN STABİL HIZLI JAVASCRIPT DOSTU RSS AKIŞLARI
+// TÜRKİYE VE DÜNYADAN EN GÜVENİLİR HABER KANALLARI (DOĞRUDAN ÇEKİM)
 const HABER_KAYNAKLARI = [
-  { ad: "Anadolu Ajansı", url: "https://rss2json.com", dil: "tr" },
-  { ad: "TRT Haber", url: "https://rss2json.com", dil: "tr" },
-  { ad: "Hürriyet", url: "https://rss2json.com", dil: "tr" },
-  { ad: "Sözcü", url: "https://rss2json.com", dil: "tr" },
-  { ad: "NTV Haber", url: "https://rss2json.com", dil: "tr" },
-  { ad: "BBC World", url: "https://rss2json.com", dil: "en" },
-  { ad: "Reuters", url: "https://rss2json.com", dil: "en" }
+  { ad: "Anadolu Ajansı", url: "https://aa.com.tr", dil: "tr", logo: "🇹🇷" },
+  { ad: "TRT Haber", url: "https://trthaber.com", dil: "tr", logo: "📺" },
+  { ad: "Hürriyet", url: "https://hurriyet.com.tr", dil: "tr", logo: "📰" },
+  { ad: "Sözcü", url: "https://sozcu.com.tr", dil: "tr", logo: "🔥" },
+  { ad: "NTV Haber", url: "https://ntv.com.tr", dil: "tr", logo: "🔴" },
+  { ad: "BBC World", url: "https://bbci.co.uk", dil: "en", logo: "🌍" },
+  { ad: "Reuters", url: "https://reuters.com", dil: "en", logo: "🌐" }
 ];
 
 async function googleCevir(metin: string): Promise<string> {
@@ -33,11 +33,12 @@ export default function Home() {
   const [aramaMetni, setAramaMetni] = useState('');
 
   useEffect(() => {
-    async function saniyedeHaberCek() {
+    async function guvenliHaberleriTopla() {
       let birlesikHaberler: any[] = [];
+      // CORS engeline takılmayan resmi küresel RSS dağıtım köprüsü
       for (let kaynak of HABER_KAYNAKLARI) {
         try {
-          const res = await fetch(kaynak.url);
+          const res = await fetch(`https://rss2json.com{encodeURIComponent(kaynak.url)}&api_key=oy4g3shz9rvewqqpzz9vscoxdldn66wylw3x5y1v`);
           const data = await res.json();
           if (data && data.status === 'ok') {
             data.items.forEach((item: any) => {
@@ -49,23 +50,24 @@ export default function Home() {
                 originalDescription: item.description ? item.description.replace(/<[^>]*>/g, '') : '',
                 link: item.link,
                 sourceName: kaynak.ad,
+                logo: kaynak.logo,
                 language: kaynak.dil,
                 image: item.enclosure?.link || item.thumbnail || 'https://unsplash.com',
-                pubDate: item.pubDate
+                pubDate: item.pubDate || new Date().toISOString()
               });
             });
           }
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error(kaynak.ad + " engellendi."); }
       }
       birlesikHaberler.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
       setOriginalItems(birlesikHaberler);
       setProcessedItems(birlesikHaberler);
       setYukleniyor(false);
     }
-    saniyedeHaberCek();
+    guvenliHaberleriTopla();
   }, []);
   useEffect(() => {
-    async function ceviriModunuUygula() {
+    async function ceviriModunuIsle() {
       if (originalItems.length === 0) return;
       if (ceviriAktif) {
         setYukleniyor(true);
@@ -83,7 +85,7 @@ export default function Home() {
         setProcessedItems(originalItems.map(item => ({ ...item, title: item.originalTitle, description: item.originalDescription, cevrildiMi: false })));
       }
     }
-    ceviriModunuUygula();
+    ceviriModunuIsle();
   }, [ceviriAktif, originalItems]);
 
   const filtrelenmisHaberler = processedItems.filter(item => {
@@ -94,81 +96,96 @@ export default function Home() {
 
   if (yukleniyor) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#090d16', color: '#f8fafc' }}>
-        <div style={{ width: '45px', height: '45px', border: '4px solid #1e293b', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}></div>
-        <p style={{ fontSize: '15px', fontWeight: '600', color: '#94a3b8', letterSpacing: '0.03em' }}>Manşetler yükleniyor ve Türkçe'ye çevriliyor...</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#0a0f1d', color: '#f8fafc' }}>
+        <div style={{ width: '45px', height: '45px', border: '4px solid #1e293b', borderTopColor: '#e11d48', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}></div>
+        <p style={{ fontSize: '15px', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.02em' }}>Büyük Haber Portalı Yükleniyor...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
+
+  const mansetHaberi = filtrelenmisHaberler[0];
+  const normalHaberler = filtrelenmisHaberler.slice(1, 41);
   return (
-    <main style={{ backgroundColor: '#090d16', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', color: '#f1f5f9', margin: 0, paddingBottom: '60px' }}>
+    <main style={{ backgroundColor: '#0a0f1d', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#f1f5f9', margin: 0, paddingBottom: '60px' }}>
       
-      {/* ULTRA MODERN DARK HEADER */}
-      <header style={{ backgroundColor: 'rgba(13, 20, 35, 0.85)', borderBottom: '1px solid #1e293b', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '14px 20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
-          <a href="/" style={{ fontSize: '20px', fontWeight: '900', color: '#fff', textDecoration: 'none', letterSpacing: '-0.02em' }}>NEXUS<span style={{ color: '#3b82f6' }}>NEWS</span></a>
+      {/* PROFESSIONAL PORTAL HEADER */}
+      <header style={{ backgroundColor: '#0d1527', borderBottom: '3px solid #e11d48', position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+        <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '15px 20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
+          <a href="/" style={{ fontSize: '24px', fontWeight: '900', color: '#fff', textDecoration: 'none', letterSpacing: '-0.03em' }}>HABER<span style={{ color: '#e11d48', backgroundColor: '#fff', padding: '2px 8px', borderRadius: '6px', marginLeft: '4px' }}>MEDYA</span></a>
           
-          <div style={{ flex: '1', maxWidth: '380px' }}>
-            <input placeholder="Haber veya kaynak odaklı arama..." onChange={(e) => setAramaMetni(e.target.value)} style={{ width: '100%', padding: '10px 18px', backgroundColor: '#131c2e', border: '1px solid #22314d', borderRadius: '14px', fontSize: '14px', color: '#fff', outline: 'none' }} />
+          <div style={{ flex: '1', maxWidth: '400px' }}>
+            <input placeholder="Haberlerde veya gazetelerde ara..." onChange={(e) => setAramaMetni(e.target.value)} style={{ width: '100%', padding: '11px 18px', backgroundColor: '#131e35', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '14px', color: '#fff', outline: 'none' }} />
           </div>
 
-          <div style={{ display: 'flex', gap: '4px', backgroundColor: '#131c2e', padding: '4px', borderRadius: '12px' }}>
-            <button onClick={() => setCeviriAktif(true)} style={{ padding: '8px 16px', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: ceviriAktif ? '#3b82f6' : 'transparent', color: '#fff' }}>✨ Türkçe Çeviri</button>
-            <button onClick={() => setCeviriAktif(false)} style={{ padding: '8px 16px', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: !ceviriAktif ? '#22314d' : 'transparent', color: '#94a3b8' }}>Orijinal</button>
+          <div style={{ display: 'flex', gap: '4px', backgroundColor: '#131e35', padding: '4px', borderRadius: '12px' }}>
+            <button onClick={() => setCeviriAktif(true)} style={{ padding: '8px 16px', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: ceviriAktif ? '#e11d48' : 'transparent', color: '#fff' }}>✨ Türkçe Çeviri</button>
+            <button onClick={() => setCeviriAktif(false)} style={{ padding: '8px 16px', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: !ceviriAktif ? '#1e293b' : 'transparent', color: '#94a3b8' }}>Orijinal Dil</button>
           </div>
         </div>
       </header>
 
-      {/* HERO SECTION */}
-      <section style={{ maxWidth: '1200px', margin: '40px auto 35px', padding: '0 20px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '38px', fontWeight: '900', color: '#fff', margin: '0 0 12px', letterSpacing: '-0.03em' }}>Dünya ve Türkiye Gündemi</h1>
-        <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '520px', margin: '0 auto 25px' }}>Tüm ulusal basın ve dünya medyasından filtrelenmiş canlı haber akış konsolu.</p>
+      {/* PORTAL MAIN CONTAINER */}
+      <div style={{ maxWidth: '1300px', margin: '30px auto 0', padding: '0 20px' }}>
         
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-          <button onClick={() => setAktifDilFiltresi('all')} style={{ padding: '8px 18px', borderRadius: '12px', border: '1px solid #1e293b', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'all' ? '#3b82f6' : '#131c2e', color: '#fff' }}>Tümü ({filtrelenmisHaberler.length})</button>
-          <button onClick={() => setAktifDilFiltresi('tr')} style={{ padding: '8px 18px', borderRadius: '12px', border: '1px solid #1e293b', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'tr' ? '#3b82f6' : '#131c2e', color: '#fff' }}>🇹🇷 Türkiye</button>
-          <button onClick={() => setAktifDilFiltresi('en')} style={{ padding: '8px 18px', borderRadius: '12px', border: '1px solid #1e293b', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'en' ? '#3b82f6' : '#131c2e', color: '#fff' }}>🌍 Dünya</button>
+        {/* KANAL SEÇİM BARBARI */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid #1e293b', paddingBottom: '15px' }}>
+          <button onClick={() => setAktifDilFiltresi('all')} style={{ padding: '8px 20px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'all' ? '#e11d48' : '#131e35', color: '#fff' }}>Tüm Manşetler ({filtrelenmisHaberler.length})</button>
+          <button onClick={() => setAktifDilFiltresi('tr')} style={{ padding: '8px 20px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'tr' ? '#e11d48' : '#131e35', color: '#fff' }}>🇹🇷 Ulusal Basın</button>
+          <button onClick={() => setAktifDilFiltresi('en')} style={{ padding: '8px 20px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'en' ? '#e11d48' : '#131e35', color: '#fff' }}>🌍 Dünya Basını</button>
         </div>
-      </section>
 
-      {/* MODERN DARK GRID LAYOUT */}
-      <section style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))', gap: '26px' }}>
-          {filtrelenmisHaberler.slice(0, 60).map((item: any, index: number) => (
-            <article key={index} onClick={() => setSeciliHaber(item)} style={{ backgroundColor: '#0f172a', borderRadius: '20px', border: '1px solid #1e293b', overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', transition: 'transform 0.2s' }}>
-              <img src={item.image} alt="" style={{ width: '100%', height: '190px', objectFit: 'cover' }} referrerPolicy="no-referrer" onError={(e:any)=>{e.target.src='https://unsplash.com'}} />
-              <div style={{ padding: '22px', flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        {/* 📰 BÜYÜK SON DAKİKA MANŞET ALANI (PORTAL STİLİ) */}
+        {mansetHaberi && !aramaMetni && (
+          <section onClick={() => setSeciliHaber(mansetHaberi)} style={{ position: 'relative', width: '100%', height: '420px', borderRadius: '24px', overflow: 'hidden', marginBottom: '40px', cursor: 'pointer', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+            <img src={mansetHaberi.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,15,29,1) 0%, rgba(10,15,29,0.4) 60%, transparent 100%)' }}></div>
+            <div style={{ position: 'absolute', bottom: '30px', left: '30px', right: '30px' }}>
+              <span style={{ backgroundColor: '#e11d48', color: '#fff', fontSize: '12px', fontWeight: '800', padding: '5px 12px', borderRadius: '6px', textTransform: 'uppercase' }}>🔥 SON DAKİKA · {mansetHaberi.sourceName}</span>
+              <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#fff', margin: '15px 0 10px', lineHeight: '1.3' }}>{mansetHaberi.title}</h2>
+              <p style={{ color: '#cbd5e1', fontSize: '14px', margin: 0, maxWidth: '700px' }}>{mansetHaberi.description}</p>
+            </div>
+          </section>
+        )}
+
+        {/* 📚 HABER PORTALI KARTLARI LISTESI */}
+        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '30px' }}>
+          {normalHaberler.map((item: any, index: number) => (
+            <article key={index} onClick={() => setSeciliHaber(item)} style={{ backgroundColor: '#0d1527', borderRadius: '18px', border: '1px solid #1c2638', overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
+              <div style={{ position: 'relative' }}>
+                <img src={item.image} alt="" style={{ width: '100%', height: '180px', objectFit: 'cover' }} referrerPolicy="no-referrer" onError={(e:any)=>{e.target.src='https://unsplash.com'}} />
+                <span style={{ position: 'absolute', bottom: '10px', left: '10px', backgroundColor: '#e11d48', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '3px 8px', borderRadius: '6px' }}>{item.logo} {item.sourceName}</span>
+              </div>
+              <div style={{ padding: '20px', flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '3px 9px', borderRadius: '8px', textTransform: 'uppercase' }}>{item.sourceName}</span>
-                    {item.cevrildiMi && <span style={{ fontSize: '11px', color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '6px', fontWeight: '700' }}>Türkçe Çeviri</span>}
-                  </div>
-                  <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 10px', lineHeight: '1.4', color: '#fff' }}>{item.title}</h3>
-                  <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.6', margin: 0 }}>{item.description ? item.description.slice(0, 110) + '...' : 'Haber özetini okumak için tıklayın.'}</p>
+                  <h3 style={{ fontSize: '15px', fontWeight: '800', margin: '0 0 10px', lineHeight: '1.4', color: '#fff' }}>{item.title}</h3>
+                  <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>{item.description ? item.description.slice(0, 110) + '...' : 'Detayları görmek için tıklayın.'}</p>
                 </div>
-                <div style={{ marginTop: '20px', paddingTop: '12px', borderTop: '1px solid #1e293b', textAlign: 'right', fontSize: '13px', color: '#3b82f6', fontWeight: '700' }}>Gelişmeleri Oku →</div>
+                <div style={{ marginTop: '20px', paddingTop: '12px', borderTop: '1px solid #1c2638', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                  {item.cevrildiMi && <span style={{ color: '#10b981', fontWeight: '700' }}>🇹🇷 Türkçe Çeviri</span>}
+                  <span style={{ color: '#e11d48', fontWeight: '700', marginLeft: 'auto' }}>Haberi Oku →</span>
+                </div>
               </div>
             </article>
           ))}
-        </div>
-        {!filtrelenmisHaberler.length && <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Filtrelere uygun haber akışı bulunamadı.</div>}
-      </section>
+        </section>
+        {!filtrelenmisHaberler.length && <div style={{ textAlign: 'center', padding: '60px', color: '#64748b', fontSize: '15px' }}>Haber akışı güncelleniyor, lütfen 5 saniye sonra sayfayı yenileyin.</div>}
+      </div>
 
-      {/* PREMIUM MODAL POPUP */}
+      {/* 💥 MODAL DETAY POPUP PENCERESİ */}
       {seciliHaber && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(5, 8, 15, 0.85)', backdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '20px' }} onClick={() => setSeciliHaber(null)}>
-          <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '28px', maxWidth: '620px', width: '100%', maxHeight: '82vh', overflowY: 'auto', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(5, 8, 17, 0.9)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '20px' }} onClick={() => setSeciliHaber(null)}>
+          <div style={{ backgroundColor: '#0d1527', border: '1px solid #1c2638', borderRadius: '24px', maxWidth: '640px', width: '100%', maxHeight: '82vh', overflowY: 'auto', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ position: 'relative', width: '100%', height: '260px' }}>
               <img src={seciliHaber.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" onError={(e:any)=>{e.target.src='https://unsplash.com'}} />
-              <button onClick={() => setSeciliHaber(null)} style={{ position: 'absolute', top: '15px', right: '15px', backgroundColor: '#090d16', border: '1px solid #1e293b', color: '#fff', width: '34px', height: '34px', borderRadius: '50%', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer' }}>✕</button>
+              <button onClick={() => setSeciliHaber(null)} style={{ position: 'absolute', top: '15px', right: '15px', backgroundColor: '#0a0f1d', border: '1px solid #1c2638', color: '#fff', width: '34px', height: '34px', borderRadius: '50%', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer' }}>✕</button>
             </div>
             <div style={{ padding: '28px' }}>
-              <span style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '4px 12px', borderRadius: '8px', textTransform: 'uppercase' }}>{seciliHaber.sourceName}</span>
-              <h2 style={{ fontSize: '21px', fontWeight: '800', margin: '18px 0 12px', lineHeight: '1.4', color: '#fff' }}>{seciliHaber.title}</h2>
-              <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.7', margin: '0 0 25px' }}>{seciliHaber.description || "Bu haber için detaylı özet metni bulunmuyor."}</p>
-              <div style={{ borderTop: '1px solid #1e293b', paddingTop: '18px', display: 'flex', justifyContent: 'flex-end' }}>
-                <a href={seciliHaber.link} target="_blank" rel="noreferrer" style={{ backgroundColor: '#3b82f6', color: '#fff', textDecoration: 'none', padding: '10px 22px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)' }}>Haber Kaynağına Git ↗</a>
+              <span style={{ fontSize: '11px', fontWeight: '800', color: '#fff', backgroundColor: '#e11d48', padding: '4px 12px', borderRadius: '6px', textTransform: 'uppercase' }}>{seciliHaber.logo} {seciliHaber.sourceName}</span>
+              <h2 style={{ fontSize: '20px', fontWeight: '900', margin: '18px 0 12px', lineHeight: '1.4', color: '#fff' }}>{seciliHaber.title}</h2>
+              <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.7', margin: '0 0 25px' }}>{seciliHaber.description || "Haber detayı için kaynak bağlantısını ziyaret edin."}</p>
+              <div style={{ borderTop: '1px solid #1c2638', paddingTop: '18px', display: 'flex', justifyContent: 'flex-end' }}>
+                <a href={seciliHaber.link} target="_blank" rel="noreferrer" style={{ backgroundColor: '#e11d48', color: '#fff', textDecoration: 'none', padding: '10px 22px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', boxShadow: '0 4px 15px rgba(225, 29, 72, 0.3)' }}>Haber Kaynağına Git ↗</a>
               </div>
             </div>
           </div>
