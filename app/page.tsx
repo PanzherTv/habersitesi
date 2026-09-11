@@ -2,17 +2,6 @@
 
 import { useState, useEffect } from 'react';
 
-// ARACI OLMAKSIZIN DOĞRUDAN SİTELERİN KENDİ ORİJİNAL RSS ADRESLERİ
-const HABER_KAYNAKLARI = [
-  { ad: "Anadolu Ajansı", url: "https://aa.com.tr", dil: "tr", logo: "🇹🇷" },
-  { ad: "TRT Haber", url: "https://trthaber.com", dil: "tr", logo: "📺" },
-  { ad: "Hürriyet", url: "https://hurriyet.com.tr", dil: "tr", logo: "📰" },
-  { ad: "Sözcü", url: "https://sozcu.com.tr", dil: "tr", logo: "🔥" },
-  { ad: "NTV Haber", url: "https://ntv.com.tr", dil: "tr", logo: "🔴" },
-  { ad: "Halk TV", url: "https://halktv.com.tr", dil: "tr", logo: "📣" },
-  { ad: "BBC World", url: "https://bbci.co.uk", dil: "en", logo: "🌍" }
-];
-
 async function googleCevir(metin: string): Promise<string> {
   if (!metin) return "";
   try {
@@ -23,6 +12,7 @@ async function googleCevir(metin: string): Promise<string> {
     return metin;
   }
 }
+
 export default function Home() {
   const [originalItems, setOriginalItems] = useState<any[]>([]);
   const [processedItems, setProcessedItems] = useState<any[]>([]);
@@ -41,61 +31,23 @@ export default function Home() {
   ]);
 
   useEffect(() => {
-    async function anindaHaberCek() {
-      let birlesikHaberler: any[] = [];
-      
-      // rss2json yerine allorigins üzerinden ham XML çekip tarayıcıda saniyesinde işleyen motor
-      for (let kaynak of HABER_KAYNAKLARI) {
-        try {
-          const res = await fetch(`https://allorigins.win{encodeURIComponent(kaynak.url)}`);
-          const data = await res.json();
-          
-          if (data && data.contents) {
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(data.contents, "text/xml");
-            const items = xmlDoc.getElementsByTagName("item");
-
-            for (let i = 0; i < Math.min(items.length, 15); i++) {
-              const title = items[i].getElementsByTagName("title")[0]?.textContent || "";
-              const link = items[i].getElementsByTagName("link")[0]?.textContent || "";
-              const description = items[i].getElementsByTagName("description")[0]?.textContent || "";
-              const pubDate = items[i].getElementsByTagName("pubDate")[0]?.textContent || new Date().toISOString();
-              
-              let image = 'https://unsplash.com';
-              const mediaContent = items[i].getElementsByTagName("media:content")[0] || items[i].getElementsByTagName("enclosure")[0];
-              if (mediaContent) {
-                image = mediaContent.getAttribute("url") || image;
-              }
-
-              if (title) {
-                birlesikHaberler.push({
-                  id: link,
-                  title: title,
-                  originalTitle: title,
-                  description: description.replace(/<[^>]*>/g, '').substring(0, 160),
-                  originalDescription: description.replace(/<[^>]*>/g, '').substring(0, 160),
-                  link: link,
-                  sourceName: kaynak.ad,
-                  logo: kaynak.logo,
-                  language: kaynak.dil,
-                  image: image,
-                  pubDate: pubDate
-                });
-              }
-            }
-          }
-        } catch (e) {
-          console.error(kaynak.ad + " anlık veri hatası.");
+    async function verileriKendiSunucumuzdanCek() {
+      try {
+        const res = await fetch('/api/feeds');
+        const data = await res.json();
+        if (data && data.items) {
+          setOriginalItems(data.items);
+          setProcessedItems(data.items);
         }
+      } catch (e) {
+        console.error("API bağlantı hatası.");
+      } finally {
+        setYukleniyor(false);
       }
-      
-      birlesikHaberler.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
-      setOriginalItems(birlesikHaberler);
-      setProcessedItems(birlesikHaberler);
-      setYukleniyor(false);
     }
-    anindaHaberCek();
+    verileriKendiSunucumuzdanCek();
   }, []);
+
   useEffect(() => {
     async function ceviriModunuUygula() {
       if (originalItems.length === 0) return;
@@ -128,7 +80,7 @@ export default function Home() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#090d16', color: '#f8fafc' }}>
         <div style={{ width: '45px', height: '45px', border: '4px solid #1e293b', borderTopColor: '#e11d48', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}></div>
-        <p style={{ fontSize: '15px', fontWeight: '700', color: '#94a3b8' }}>Haberler aracı olmadan doğrudan kaynaktan çekiliyor...</p>
+        <p style={{ fontSize: '15px', fontWeight: '700', color: '#94a3b8' }}>Haber akışı Vercel sunucusunda güvenle hazırlanıyor...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -160,20 +112,20 @@ export default function Home() {
         <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '15px 20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
           <a href="/" style={{ fontSize: '24px', fontWeight: '900', color: '#fff', textDecoration: 'none' }}>HABER<span style={{ color: '#e11d48', backgroundColor: '#fff', padding: '2px 8px', borderRadius: '6px', marginLeft: '4px' }}>MEDYA</span></a>
           <div style={{ flex: '1', maxWidth: '380px' }}>
-            <input placeholder="Haber veya kaynak odaklı arama..." onChange={(e) => setAramaMetni(e.target.value)} style={{ width: '100%', padding: '10px 18px', backgroundColor: '#131c2e', border: '1px solid #22314d', borderRadius: '12px', fontSize: '14px', color: '#fff', outline: 'none' }} />
+            <input placeholder="Haber veya kaynak odaklı arama..." onChange={(e) => setAramaMetni(e.target.value)} style={{ width: '100%', padding: '10px 18px', backgroundColor: '#131e35', border: '1px solid #22314d', borderRadius: '12px', fontSize: '14px', color: '#fff', outline: 'none' }} />
           </div>
-          <div style={{ display: 'flex', gap: '4px', backgroundColor: '#131c2e', padding: '4px', borderRadius: '12px' }}>
+          <div style={{ display: 'flex', gap: '4px', backgroundColor: '#131e35', padding: '4px', borderRadius: '12px' }}>
             <button onClick={() => setCeviriAktif(true)} style={{ padding: '8px 16px', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: ceviriAktif ? '#e11d48' : 'transparent', color: '#fff' }}>✨ Türkçe Çeviri</button>
-            <button onClick={() => setCeviriAktif(false)} style={{ padding: '8px 16px', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: !ceviriAktif ? '#22314d' : 'transparent', color: '#94a3b8' }}>Orijinal</button>
+            <button onClick={() => setCeviriAktif(false)} style={{ padding: '8px 16px', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: !ceviriAktif ? '#1e293b' : 'transparent', color: '#94a3b8' }}>Orijinal</button>
           </div>
         </div>
       </header>
 
       <div style={{ maxWidth: '1300px', margin: '30px auto 0', padding: '0 20px' }}>
         <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid #1e293b', paddingBottom: '15px' }}>
-          <button onClick={() => setAktifDilFiltresi('all')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'all' ? '#e11d48' : '#131c2e', color: '#fff' }}>Tümü ({filtrelenmisHaberler.length})</button>
-          <button onClick={() => setAktifDilFiltresi('tr')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'tr' ? '#e11d48' : '#131c2e', color: '#fff' }}>🇹🇷 Türkiye</button>
-          <button onClick={() => setAktifDilFiltresi('en')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'en' ? '#e11d48' : '#131c2e', color: '#fff' }}>🌍 Dünya</button>
+          <button onClick={() => setAktifDilFiltresi('all')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'all' ? '#e11d48' : '#131e35', color: '#fff' }}>Tümü ({filtrelenmisHaberler.length})</button>
+          <button onClick={() => setAktifDilFiltresi('tr')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'tr' ? '#e11d48' : '#131e35', color: '#fff' }}>🇹🇷 Türkiye</button>
+          <button onClick={() => setAktifDilFiltresi('en')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'en' ? '#e11d48' : '#131e35', color: '#fff' }}>🌍 Dünya</button>
         </div>
 
         {mansetHaberi && !aramaMetni && (
@@ -209,7 +161,7 @@ export default function Home() {
       </div>
 
       {seciliHaber && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(5, 8, 17, 0.85)', backdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '20px' }} onClick={() => setSeciliHaber(null)}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(5, 8, 15, 0.85)', backdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '20px' }} onClick={() => setSeciliHaber(null)}>
           <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '28px', maxWidth: '620px', width: '100%', maxHeight: '82vh', overflowY: 'auto', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ position: 'relative', width: '100%', height: '260px' }}>
               <img src={seciliHaber.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
