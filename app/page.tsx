@@ -2,17 +2,15 @@
 
 import { useState, useEffect } from 'react';
 
-// TÜRKİYE VE DÜNYADAN TÜM ANA AKIM HABER KAYNAKLARI (RSS KANALLARI)
+// TÜRKİYE VE DÜNYADAN TÜM HABER KAYNAKLARI DOĞRUDAN BURADA
 const HABER_KAYNAKLARI = [
   { ad: "Anadolu Ajansı", url: "https://rss2json.com", dil: "tr", kat: "Gündem" },
   { ad: "TRT Haber", url: "https://rss2json.com", dil: "tr", kat: "Gündem" },
   { ad: "Hürriyet", url: "https://rss2json.com", dil: "tr", kat: "Gündem" },
   { ad: "Sözcü", url: "https://rss2json.com", dil: "tr", kat: "Son Dakika" },
   { ad: "NTV Haber", url: "https://rss2json.com", dil: "tr", kat: "Gündem" },
-  { ad: "Habertürk", url: "https://rss2json.com", dil: "tr", kat: "Gündem" },
   { ad: "BBC World", url: "https://rss2json.com", dil: "en", kat: "Dünya" },
-  { ad: "Reuters", url: "https://rss2json.com", dil: "en", kat: "Dünya" },
-  { ad: "CNN International", url: "https://rss2json.com", dil: "en", kat: "Dünya" }
+  { ad: "Reuters", url: "https://rss2json.com", dil: "en", kat: "Dünya" }
 ];
 
 async function googleCevir(metin: string): Promise<string> {
@@ -20,12 +18,11 @@ async function googleCevir(metin: string): Promise<string> {
   try {
     const res = await fetch(`https://googleapis.com{encodeURIComponent(metin)}`);
     const data = await res.json();
-    return data[0].map((item: any) => item[0]).join('');
+    return data.map((item: any) => item).join('');
   } catch (error) {
     return metin;
   }
 }
-
 export default function Home() {
   const [originalItems, setOriginalItems] = useState<any[]>([]);
   const [processedItems, setProcessedItems] = useState<any[]>([]);
@@ -33,7 +30,6 @@ export default function Home() {
   const [seciliHaber, setSeciliHaber] = useState<any>(null);
   const [ceviriAktif, setCeviriAktif] = useState(true);
   const [aktifDilFiltresi, setAktifDilFiltresi] = useState('all');
-  const [aktifKategori, setAktifKategori] = useState('all');
   const [aramaMetni, setAramaMetni] = useState('');
 
   useEffect(() => {
@@ -47,8 +43,8 @@ export default function Home() {
             data.items.forEach((item: any) => {
               birlesikHaberler.push({
                 id: item.guid || item.link,
-                title: item.title,
-                originalTitle: item.title,
+                title: item.title || "",
+                originalTitle: item.title || "",
                 description: item.description ? item.description.replace(/<[^>]*>/g, '') : '',
                 originalDescription: item.description ? item.description.replace(/<[^>]*>/g, '') : '',
                 link: item.link,
@@ -60,7 +56,7 @@ export default function Home() {
               });
             });
           }
-        } catch (e) { console.error(kaynak.ad + " çekilemedi."); }
+        } catch (e) { console.error(e); }
       }
       birlesikHaberler.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
       setOriginalItems(birlesikHaberler);
@@ -96,7 +92,7 @@ export default function Home() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#f8fafc' }}>
         <div style={{ width: '40px', height: '40px', border: '4px solid #cbd5e1', borderTopColor: '#2563eb', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-        <p style={{ fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>Haberler canlı çevriliyor ve akış hazırlanıyor...</p>
+        <p style={{ fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>Haber akışı ve canlı çeviriler hazırlanıyor...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -104,9 +100,8 @@ export default function Home() {
 
   const filtrelenmisHaberler = processedItems.filter(item => {
     const dE = aktifDilFiltresi === 'all' || (aktifDilFiltresi === 'tr' ? item.language === 'tr' : item.language === 'en');
-    const kE = aktifKategori === 'all' || item.category === aktifKategori;
     const aE = !aramaMetni || item.title.toLowerCase().includes(aramaMetni.toLowerCase()) || item.sourceName.toLowerCase().includes(aramaMetni.toLowerCase());
-    return dE && kE && aE;
+    return dE && aE;
   });
 
   return (
@@ -135,8 +130,8 @@ export default function Home() {
       </section>
       <section style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
-          {filtrelenmisHaberler.slice(0, 60).map((item) => (
-            <article key={item.id} onClick={() => setSeciliHaber(item)} style={{ backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.01)' }}>
+          {filtrelenmisHaberler.slice(0, 60).map((item: any, index: number) => (
+            <article key={index} onClick={() => setSeciliHaber(item)} style={{ backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.01)' }}>
               <img src={item.image} alt="" style={{ width: '100%', height: '180px', objectFit: 'cover' }} referrerPolicy="no-referrer" onError={(e:any)=>{e.target.src='https://unsplash.com'}} />
               <div style={{ padding: '20px', flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
@@ -166,7 +161,7 @@ export default function Home() {
               <h2 style={{ fontSize: '20px', fontWeight: '800', margin: '15px 0 10px', lineHeight: '1.4' }}>{seciliHaber.title}</h2>
               <p style={{ fontSize: '14px', color: '#334155', lineHeight: '1.6', margin: '0 0 20px' }}>{seciliHaber.description || "Bu haber için detaylı özet metni bulunmuyor."}</p>
               <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '15px', display: 'flex', justifyContent: 'flex-end' }}>
-                <a href={seciliHaber.link} target="_blank" rel="noreferrer" style={{ backgroundColor: '#2563eb', color: '#fff', textDecoration: 'none', padding: '8px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: '600' }}>Haber Kaynağına Git ↗<a>
+                <a href={seciliHaber.link} target="_blank" rel="noreferrer" style={{ backgroundColor: '#2563eb', color: '#fff', textDecoration: 'none', padding: '8px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: '600' }}>Haber Kaynağına Git ↗</a>
               </div>
             </div>
           </div>
