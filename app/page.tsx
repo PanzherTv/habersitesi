@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 
+// ARACI OLMAKSIZIN DOĞRUDAN SİTELERİN KENDİ ORİJİNAL RSS ADRESLERİ
 const HABER_KAYNAKLARI = [
-  { ad: "Anadolu Ajansı", url: "https://rss2json.com", dil: "tr", logo: "🇹🇷" },
-  { ad: "TRT Haber", url: "https://rss2json.com", dil: "tr", logo: "📺" },
-  { ad: "Hürriyet", url: "https://rss2json.com", dil: "tr", logo: "📰" },
-  { ad: "Sözcü", url: "https://rss2json.com", dil: "tr", logo: "🔥" },
-  { ad: "NTV Haber", url: "https://rss2json.com", dil: "tr", logo: "🔴" },
-  { ad: "Halk TV", url: "https://rss2json.com", dil: "tr", logo: "📣" },
-  { ad: "BBC World", url: "https://rss2json.com", dil: "en", logo: "🌍" },
-  { ad: "Reuters", url: "https://rss2json.com", dil: "en", logo: "🌐" }
+  { ad: "Anadolu Ajansı", url: "https://aa.com.tr", dil: "tr", logo: "🇹🇷" },
+  { ad: "TRT Haber", url: "https://trthaber.com", dil: "tr", logo: "📺" },
+  { ad: "Hürriyet", url: "https://hurriyet.com.tr", dil: "tr", logo: "📰" },
+  { ad: "Sözcü", url: "https://sozcu.com.tr", dil: "tr", logo: "🔥" },
+  { ad: "NTV Haber", url: "https://ntv.com.tr", dil: "tr", logo: "🔴" },
+  { ad: "Halk TV", url: "https://halktv.com.tr", dil: "tr", logo: "📣" },
+  { ad: "BBC World", url: "https://bbci.co.uk", dil: "en", logo: "🌍" }
 ];
 
 async function googleCevir(metin: string): Promise<string> {
@@ -41,37 +41,60 @@ export default function Home() {
   ]);
 
   useEffect(() => {
-    async function saniyedeHaberCek() {
+    async function anindaHaberCek() {
       let birlesikHaberler: any[] = [];
+      
+      // rss2json yerine allorigins üzerinden ham XML çekip tarayıcıda saniyesinde işleyen motor
       for (let kaynak of HABER_KAYNAKLARI) {
         try {
-          const res = await fetch(kaynak.url);
+          const res = await fetch(`https://allorigins.win{encodeURIComponent(kaynak.url)}`);
           const data = await res.json();
-          if (data && data.status === 'ok') {
-            data.items.forEach((item: any) => {
-              birlesikHaberler.push({
-                id: item.guid || item.link,
-                title: item.title || "",
-                originalTitle: item.title || "",
-                description: item.description ? item.description.replace(/<[^>]*>/g, '') : '',
-                originalDescription: item.description ? item.description.replace(/<[^>]*>/g, '') : '',
-                link: item.link,
-                sourceName: kaynak.ad,
-                logo: kaynak.logo,
-                language: kaynak.dil,
-                image: item.enclosure?.link || item.thumbnail || 'https://unsplash.com',
-                pubDate: item.pubDate || new Date().toISOString()
-              });
-            });
+          
+          if (data && data.contents) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+            const items = xmlDoc.getElementsByTagName("item");
+
+            for (let i = 0; i < Math.min(items.length, 15); i++) {
+              const title = items[i].getElementsByTagName("title")[0]?.textContent || "";
+              const link = items[i].getElementsByTagName("link")[0]?.textContent || "";
+              const description = items[i].getElementsByTagName("description")[0]?.textContent || "";
+              const pubDate = items[i].getElementsByTagName("pubDate")[0]?.textContent || new Date().toISOString();
+              
+              let image = 'https://unsplash.com';
+              const mediaContent = items[i].getElementsByTagName("media:content")[0] || items[i].getElementsByTagName("enclosure")[0];
+              if (mediaContent) {
+                image = mediaContent.getAttribute("url") || image;
+              }
+
+              if (title) {
+                birlesikHaberler.push({
+                  id: link,
+                  title: title,
+                  originalTitle: title,
+                  description: description.replace(/<[^>]*>/g, '').substring(0, 160),
+                  originalDescription: description.replace(/<[^>]*>/g, '').substring(0, 160),
+                  link: link,
+                  sourceName: kaynak.ad,
+                  logo: kaynak.logo,
+                  language: kaynak.dil,
+                  image: image,
+                  pubDate: pubDate
+                });
+              }
+            }
           }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+          console.error(kaynak.ad + " anlık veri hatası.");
+        }
       }
+      
       birlesikHaberler.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
       setOriginalItems(birlesikHaberler);
       setProcessedItems(birlesikHaberler);
       setYukleniyor(false);
     }
-    saniyedeHaberCek();
+    anindaHaberCek();
   }, []);
   useEffect(() => {
     async function ceviriModunuUygula() {
@@ -105,7 +128,7 @@ export default function Home() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#090d16', color: '#f8fafc' }}>
         <div style={{ width: '45px', height: '45px', border: '4px solid #1e293b', borderTopColor: '#e11d48', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}></div>
-        <p style={{ fontSize: '15px', fontWeight: '700', color: '#94a3b8' }}>Haber Medya Portalı Başlatılıyor...</p>
+        <p style={{ fontSize: '15px', fontWeight: '700', color: '#94a3b8' }}>Haberler aracı olmadan doğrudan kaynaktan çekiliyor...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -165,7 +188,7 @@ export default function Home() {
           </section>
         )}
 
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))', gap: '26px' }}>
+        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))', gap: '24px' }}>
           {normalHaberler.map((item: any, index: number) => (
             <article key={index} onClick={() => setSeciliHaber(item)} style={{ backgroundColor: '#0f172a', borderRadius: '20px', border: '1px solid #1e293b', overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}>
               <img src={item.image} alt="" style={{ width: '100%', height: '190px', objectFit: 'cover' }} referrerPolicy="no-referrer" onError={(e:any)=>{e.target.src='https://unsplash.com'}} />
@@ -186,7 +209,7 @@ export default function Home() {
       </div>
 
       {seciliHaber && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(5, 8, 15, 0.85)', backdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '20px' }} onClick={() => setSeciliHaber(null)}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(5, 8, 17, 0.85)', backdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '20px' }} onClick={() => setSeciliHaber(null)}>
           <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '28px', maxWidth: '620px', width: '100%', maxHeight: '82vh', overflowY: 'auto', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ position: 'relative', width: '100%', height: '260px' }}>
               <img src={seciliHaber.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
