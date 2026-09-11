@@ -2,6 +2,17 @@
 
 import { useState, useEffect } from 'react';
 
+// BURAK SAKINOL'UN PROJESİNDEKİ ORİJİNAL EN STABİL VERİ KÖPRÜSÜ
+const HABER_KAYNAKLARI = [
+  { ad: "Anadolu Ajansı", url: "https://rss2json.com", dil: "tr", logo: "🇹🇷" },
+  { ad: "TRT Haber", url: "https://rss2json.com", dil: "tr", logo: "📺" },
+  { ad: "Hürriyet", url: "https://rss2json.com", dil: "tr", logo: "📰" },
+  { ad: "Sözcü", url: "https://rss2json.com", dil: "tr", logo: "🔥" },
+  { ad: "NTV Haber", url: "https://rss2json.com", dil: "tr", logo: "🔴" },
+  { ad: "Halk TV", url: "https://rss2json.com", dil: "tr", logo: "📣" },
+  { ad: "BBC World", url: "https://rss2json.com", dil: "en", logo: "🌍" }
+];
+
 async function googleCevir(metin: string): Promise<string> {
   if (!metin) return "";
   try {
@@ -12,7 +23,6 @@ async function googleCevir(metin: string): Promise<string> {
     return metin;
   }
 }
-
 export default function Home() {
   const [originalItems, setOriginalItems] = useState<any[]>([]);
   const [processedItems, setProcessedItems] = useState<any[]>([]);
@@ -31,23 +41,38 @@ export default function Home() {
   ]);
 
   useEffect(() => {
-    async function verileriKendiSunucumuzdanCek() {
-      try {
-        const res = await fetch('/api/feeds');
-        const data = await res.json();
-        if (data && data.items) {
-          setOriginalItems(data.items);
-          setProcessedItems(data.items);
-        }
-      } catch (e) {
-        console.error("API bağlantı hatası.");
-      } finally {
-        setYukleniyor(false);
+    async function verileriCek() {
+      let birlesikHaberler: any[] = [];
+      for (let kaynak of HABER_KAYNAKLARI) {
+        try {
+          const res = await fetch(kaynak.url);
+          const data = await res.json();
+          if (data && data.status === 'ok') {
+            data.items.forEach((item: any) => {
+              birlesikHaberler.push({
+                id: item.guid || item.link,
+                title: item.title || "",
+                originalTitle: item.title || "",
+                description: item.description ? item.description.replace(/<[^>]*>/g, '') : '',
+                originalDescription: item.description ? item.description.replace(/<[^>]*>/g, '') : '',
+                link: item.link,
+                sourceName: kaynak.ad,
+                logo: kaynak.logo,
+                language: kaynak.dil,
+                image: item.enclosure?.link || item.thumbnail || 'https://unsplash.com',
+                pubDate: item.pubDate || new Date().toISOString()
+              });
+            });
+          }
+        } catch (e) { console.error(e); }
       }
+      birlesikHaberler.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+      setOriginalItems(birlesikHaberler);
+      setProcessedItems(birlesikHaberler);
+      setYukleniyor(false);
     }
-    verileriKendiSunucumuzdanCek();
+    verileriCek();
   }, []);
-
   useEffect(() => {
     async function ceviriModunuUygula() {
       if (originalItems.length === 0) return;
@@ -80,7 +105,7 @@ export default function Home() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#090d16', color: '#f8fafc' }}>
         <div style={{ width: '45px', height: '45px', border: '4px solid #1e293b', borderTopColor: '#e11d48', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}></div>
-        <p style={{ fontSize: '15px', fontWeight: '700', color: '#94a3b8' }}>Haber akışı Vercel sunucusunda güvenle hazırlanıyor...</p>
+        <p style={{ fontSize: '15px', fontWeight: '700', color: '#94a3b8' }}>Akış Projesi Başlatılıyor...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -91,7 +116,7 @@ export default function Home() {
   return (
     <main style={{ backgroundColor: '#090d16', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', color: '#f1f5f9', margin: 0, paddingBottom: '60px' }}>
       
-      {/* CANLI FİNANS VE HAVA DURUMU ŞERİDİ */}
+      {/* 🔴 CANLI FİNANS VE HAVA DURUMU ŞERİDİ */}
       <div style={{ backgroundColor: '#05080f', borderBottom: '1px solid #1e293b', padding: '10px 20px', fontSize: '12px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '15px' }}>
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <span style={{ color: '#64748b', fontWeight: 'bold' }}>📈 CANLI BORSALAR:</span>
@@ -110,13 +135,13 @@ export default function Home() {
       {/* HEADER */}
       <header style={{ backgroundColor: '#0d1527', borderBottom: '3px solid #e11d48', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '15px 20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
-          <a href="/" style={{ fontSize: '24px', fontWeight: '900', color: '#fff', textDecoration: 'none' }}>HABER<span style={{ color: '#e11d48', backgroundColor: '#fff', padding: '2px 8px', borderRadius: '6px', marginLeft: '4px' }}>MEDYA</span></a>
+          <a href="/" style={{ fontSize: '24px', fontWeight: '900', color: '#fff', textDecoration: 'none' }}>AKIŞ<span style={{ color: '#e11d48', backgroundColor: '#fff', padding: '2px 8px', borderRadius: '6px', marginLeft: '4px' }}>.</span></a>
           <div style={{ flex: '1', maxWidth: '380px' }}>
             <input placeholder="Haber veya kaynak odaklı arama..." onChange={(e) => setAramaMetni(e.target.value)} style={{ width: '100%', padding: '10px 18px', backgroundColor: '#131c2e', border: '1px solid #22314d', borderRadius: '12px', fontSize: '14px', color: '#fff', outline: 'none' }} />
           </div>
           <div style={{ display: 'flex', gap: '4px', backgroundColor: '#131c2e', padding: '4px', borderRadius: '12px' }}>
             <button onClick={() => setCeviriAktif(true)} style={{ padding: '8px 16px', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: ceviriAktif ? '#e11d48' : 'transparent', color: '#fff' }}>✨ Türkçe Çeviri</button>
-            <button onClick={() => setCeviriAktif(false)} style={{ padding: '8px 16px', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: !ceviriAktif ? '#1e293b' : 'transparent', color: '#94a3b8' }}>Orijinal</button>
+            <button onClick={() => setCeviriAktif(false)} style={{ padding: '8px 16px', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: !ceviriAktif ? '#22314d' : 'transparent', color: '#94a3b8' }}>Orijinal</button>
           </div>
         </div>
       </header>
@@ -133,7 +158,7 @@ export default function Home() {
             <img src={mansetHaberi.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,15,29,1) 0%, rgba(10,15,29,0.4) 60%, transparent 100%)' }}></div>
             <div style={{ position: 'absolute', bottom: '30px', left: '30px', right: '30px' }}>
-              <span style={{ backgroundColor: '#e11d48', color: '#fff', fontSize: '12px', fontWeight: '800', padding: '5px 12px', borderRadius: '6px' }}>🔥 PORTAL MANŞET · {mansetHaberi.sourceName}</span>
+              <span style={{ backgroundColor: '#e11d48', color: '#fff', fontSize: '12px', fontWeight: '800', padding: '5px 12px', borderRadius: '6px' }}>🔥 MANŞET · {mansetHaberi.sourceName}</span>
               <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#fff', margin: '15px 0 10px', lineHeight: '1.3' }}>{mansetHaberi.title}</h2>
               <p style={{ color: '#cbd5e1', fontSize: '14px', margin: 0 }}>{mansetHaberi.description}</p>
             </div>
@@ -146,7 +171,7 @@ export default function Home() {
               <img src={item.image} alt="" style={{ width: '100%', height: '190px', objectFit: 'cover' }} referrerPolicy="no-referrer" onError={(e:any)=>{e.target.src='https://unsplash.com'}} />
               <div style={{ padding: '22px', flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: '12px' }}>
                     <span style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '3px 9px', borderRadius: '8px' }}>{item.logo} {item.sourceName}</span>
                     {item.cevrildiMi && <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700' }}>✓ Türkçe Başlık</span>}
                   </div>
@@ -171,6 +196,8 @@ export default function Home() {
               <span style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '4px 12px', borderRadius: '8px' }}>{seciliHaber.logo} {seciliHaber.sourceName}</span>
               <h2 style={{ fontSize: '21px', fontWeight: '800', margin: '18px 0 12px', color: '#fff' }}>{seciliHaber.title}</h2>
               <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.7', margin: '0 0 25px' }}>{seciliHaber.description}</p>
+              
+              {/* TALEP ETTİĞİNİZ SİTE KAYNAĞINA GİT BUTONU */}
               <div style={{ borderTop: '1px solid #1e293b', paddingTop: '18px', display: 'flex', justifyContent: 'flex-end' }}>
                 <a href={seciliHaber.link} target="_blank" rel="noreferrer" style={{ backgroundColor: '#e11d48', color: '#fff', textDecoration: 'none', padding: '10px 22px', borderRadius: '12px', fontSize: '13px', fontWeight: '700' }}>Haber Kaynağına Git ↗</a>
               </div>
