@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 
-// TÜRKİYE VE DÜNYADAN EN STABİL JAVASCRIPT DOSTU RSS AKIŞLARI
 const HABER_KAYNAKLARI = [
   { ad: "Anadolu Ajansı", url: "https://rss2json.com", dil: "tr", logo: "🇹🇷" },
   { ad: "TRT Haber", url: "https://rss2json.com", dil: "tr", logo: "📺" },
@@ -112,12 +111,12 @@ export default function Home() {
     );
   }
 
-  const mansetHaberi = filtrelenmisHaberler;
+  const mansetHaberi = filtrelenmisHaberler[0];
   const normalHaberler = filtrelenmisHaberler.slice(1, 46);
   return (
     <main style={{ backgroundColor: '#090d16', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', color: '#f1f5f9', margin: 0, paddingBottom: '60px' }}>
       
-      {/* 🔴 CANLI FİNANS VE HAVA DURUMU ŞERİDİ */}
+      {/* CANLI FİNANS VE HAVA DURUMU ŞERİDİ */}
       <div style={{ backgroundColor: '#05080f', borderBottom: '1px solid #1e293b', padding: '10px 20px', fontSize: '12px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '15px' }}>
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <span style={{ color: '#64748b', fontWeight: 'bold' }}>📈 CANLI BORSALAR:</span>
@@ -146,6 +145,7 @@ export default function Home() {
           </div>
         </div>
       </header>
+
       <div style={{ maxWidth: '1300px', margin: '30px auto 0', padding: '0 20px' }}>
         <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid #1e293b', paddingBottom: '15px' }}>
           <button onClick={() => setAktifDilFiltresi('all')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'all' ? '#e11d48' : '#131c2e', color: '#fff' }}>Tümü ({filtrelenmisHaberler.length})</button>
@@ -196,8 +196,6 @@ export default function Home() {
               <span style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '4px 12px', borderRadius: '8px' }}>{seciliHaber.logo} {seciliHaber.sourceName}</span>
               <h2 style={{ fontSize: '21px', fontWeight: '800', margin: '18px 0 12px', color: '#fff' }}>{seciliHaber.title}</h2>
               <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.7', margin: '0 0 25px' }}>{seciliHaber.description}</p>
-              
-              {/* TALEP ETTİĞİNİZ SİTE KAYNAĞINA GİT SEÇENEĞİ */}
               <div style={{ borderTop: '1px solid #1e293b', paddingTop: '18px', display: 'flex', justifyContent: 'flex-end' }}>
                 <a href={seciliHaber.link} target="_blank" rel="noreferrer" style={{ backgroundColor: '#e11d48', color: '#fff', textDecoration: 'none', padding: '10px 22px', borderRadius: '12px', fontSize: '13px', fontWeight: '700' }}>Haber Kaynağına Git ↗</a>
               </div>
