@@ -1,19 +1,23 @@
-# AKIŞ — Global RSS Haber Aggregator
+# AKIŞ — Türkiye + Dünya RSS Haber
 
-Türkiye ve dünyadaki geniş RSS kaynaklarını tek modern Next.js haber akışında birleştirir.
+Türkiye ve dünyadaki geniş RSS/Atom kaynaklarını tek modern Next.js haber akışında birleştirir. Arayüz Türkçedir.
 
 ## Kaynak mimarisi
 
-Proje, tek tek yüzlerce siteyi sabit kodlamak yerine geniş bir OPML RSS dizinini dinamik olarak okur. Varsayılan dizin:
+Proje, tek tek yüzlerce siteyi sabit kodlamak yerine iki geniş OPML dizinini dinamik olarak okur:
 
-`https://webisso.github.io/swipe-rss/feeds.opml`
+1. `https://webisso.github.io/swipe-rss/feeds.opml` — çok dilli RSS koleksiyonu; Türkçe ve İngilizce kaynaklar ile haber, teknoloji, bilim, spor, ekonomi, kültür ve eğlence kategorileri içerir.
+2. `https://raw.githubusercontent.com/hashiverse/news-feeds/main/feeds.opml` — geniş uluslararası haber koleksiyonu.
 
-Dizin; Türkçe ve İngilizce dahil çok sayıda kaynak ile teknoloji, bilim, spor, ekonomi, kültür, eğlence vb. kategoriler içeriyor. Dizinden erişilemeyen durumda TRT Haber, Habertürk, Sözcü, DonanımHaber, Webtekno, Webrazzi, BBC World ve The Guardian fallback olarak kullanılır.
+Dizinlerden biri geçici olarak erişilemezse yerleşik Türkçe + dünya fallback kaynakları kullanılır.
 
 ## Özellikler
 
+- 🇹🇷 Türkçe arayüz
+- 🇹🇷 Türkçe haber filtresi
+- 🌍 Dünya haberleri filtresi
 - Dinamik OPML feed discovery
-- Türkiye + dünya + teknoloji + bilim + ekonomi + spor + kültür vb.
+- Türkiye + dünya + teknoloji + bilim + ekonomi + spor + kültür + eğlence vb.
 - RSS/Atom parsing
 - 12 feed eşzamanlı fetch
 - Feed başına son 12 haber
@@ -23,6 +27,7 @@ Dizin; Türkçe ve İngilizce dahil çok sayıda kaynak ile teknoloji, bilim, sp
 - Responsive modern arayüz
 - `/api/feeds` JSON endpoint
 - Bir feed bozulduğunda diğerlerinin devam etmesi
+- Vercel/Next.js deployment için hazır
 
 ## Kurulum
 
@@ -38,16 +43,19 @@ npm run build
 npm start
 ```
 
-## Özel OPML
+## Vercel'e yayınlama
 
-`.env.local`:
+GitHub reposunu Vercel'e import ederek doğrudan deploy edebilirsin. Framework olarak Next.js otomatik algılanır; özel build ayarı gerekmez.
+
+İsteğe bağlı environment variable:
 
 ```env
-FEED_DIRECTORY_URL=https://ornek.com/feeds.opml
+FEED_DIRECTORY_URL=https://webisso.github.io/swipe-rss/feeds.opml
+GLOBAL_FEED_DIRECTORY_URL=https://raw.githubusercontent.com/hashiverse/news-feeds/main/feeds.opml
 ```
 
 ## Önemli
 
-"Dünyadaki tüm haber siteleri" teknik olarak sabit ve tamamlanabilir bir liste değildir: yeni siteler açılır, RSS URL'leri değişir, bazı yayıncılar RSS sağlamaz veya erişimi sınırlar. Bu nedenle OPML tabanlı dinamik mimari kullanılmıştır.
+"Dünyadaki tüm haber siteleri" teknik olarak sabit ve tamamlanabilir bir liste değildir: yeni siteler açılır, RSS URL'leri değişir, bazı yayıncılar RSS sağlamaz veya erişimi sınırlar. Bu nedenle uygulama, geniş ve güncellenebilir OPML dizinlerini kullanır.
 
 Uygulama tam haber metnini kopyalamak yerine RSS meta/özet bilgisini gösterip orijinal yayına yönlendirir. Her yayıncının RSS kullanım koşulları ve telif şartları ayrıca kontrol edilmelidir.
