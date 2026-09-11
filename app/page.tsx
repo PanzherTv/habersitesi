@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 
-// TÜRKİYE VE DÜNYADAN TÜM HABER KAYNAKLARI DOĞRUDAN BURADA
+// TÜRKİYE VE DÜNYADAN TÜM ANA AKIM HABER KAYNAKLARI (GÜNCEL RSS LİSTESİ)
 const HABER_KAYNAKLARI = [
-  { ad: "Anadolu Ajansı", url: "https://rss2json.com", dil: "tr", kat: "Gündem" },
-  { ad: "TRT Haber", url: "https://rss2json.com", dil: "tr", kat: "Gündem" },
-  { ad: "Hürriyet", url: "https://rss2json.com", dil: "tr", kat: "Gündem" },
-  { ad: "Sözcü", url: "https://rss2json.com", dil: "tr", kat: "Son Dakika" },
-  { ad: "NTV Haber", url: "https://rss2json.com", dil: "tr", kat: "Gündem" },
-  { ad: "BBC World", url: "https://rss2json.com", dil: "en", kat: "Dünya" },
-  { ad: "Reuters", url: "https://rss2json.com", dil: "en", kat: "Dünya" }
+  { ad: "Anadolu Ajansı", url: "https://rss2json.com", dil: "tr" },
+  { ad: "TRT Haber", url: "https://rss2json.com", dil: "tr" },
+  { ad: "Hürriyet", url: "https://rss2json.com", dil: "tr" },
+  { ad: "Sözcü", url: "https://rss2json.com", dil: "tr" },
+  { ad: "NTV Haber", url: "https://rss2json.com", dil: "tr" },
+  { ad: "BBC World News", url: "https://rss2json.com", dil: "en" },
+  { ad: "Reuters", url: "https://rss2json.com", dil: "en" }
 ];
 
 async function googleCevir(metin: string): Promise<string> {
@@ -18,7 +18,7 @@ async function googleCevir(metin: string): Promise<string> {
   try {
     const res = await fetch(`https://googleapis.com{encodeURIComponent(metin)}`);
     const data = await res.json();
-    return data.map((item: any) => item).join('');
+    return data[0].map((item: any) => item[0]).join('');
   } catch (error) {
     return metin;
   }
@@ -39,7 +39,7 @@ export default function Home() {
         try {
           const res = await fetch(kaynak.url);
           const data = await res.json();
-          if (data.status === 'ok') {
+          if (data && data.status === 'ok') {
             data.items.forEach((item: any) => {
               birlesikHaberler.push({
                 id: item.guid || item.link,
@@ -50,7 +50,6 @@ export default function Home() {
                 link: item.link,
                 sourceName: kaynak.ad,
                 language: kaynak.dil,
-                category: kaynak.kat,
                 image: item.enclosure?.link || item.thumbnail || 'https://unsplash.com',
                 pubDate: item.pubDate
               });
@@ -92,7 +91,7 @@ export default function Home() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#f8fafc' }}>
         <div style={{ width: '40px', height: '40px', border: '4px solid #cbd5e1', borderTopColor: '#2563eb', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-        <p style={{ fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>Haber akışı ve canlı çeviriler hazırlanıyor...</p>
+        <p style={{ fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>Haberler canlı çevriliyor ve akış hazırlanıyor...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -108,7 +107,7 @@ export default function Home() {
     <main style={{ backgroundColor: '#f8fafc', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', color: '#0f172a', margin: 0, paddingBottom: '50px' }}>
       <header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '12px 20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
-          <a href="/" style={{ fontSize: '22px', fontWeight: '800', color: '#1e3a8a', textDecoration: 'none' }}>AKIŞ<span style={{ color: '#2563eb' }}>.</span></a>
+          <a href="/" style={{ fontSize: '22px', fontWeight: '800', color: '#1e3a8a', textDecoration: 'none' }}>GÜNDEM RADARI<span style={{ color: '#2563eb' }}>.</span></a>
           <div style={{ flex: '1', maxWidth: '350px' }}>
             <input placeholder="Haberlerde veya kaynaklarda ara..." onChange={(e) => setAramaMetni(e.target.value)} style={{ width: '100%', padding: '8px 16px', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
           </div>
@@ -120,8 +119,8 @@ export default function Home() {
       </header>
 
       <section style={{ maxWidth: '1200px', margin: '30px auto', padding: '0 20px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 10px' }}>Dünya ve Türkiye Gündemi <span style={{ color: '#2563eb' }}>Tek Akışta</span></h1>
-        <p style={{ color: '#64748b', fontSize: '15px', margin: '0 0 20px' }}>Reklamsız, sade ve anlık haber takip radarı.</p>
+        <h1 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 10px' }}>Dünya ve Türkiye Basını <span style={{ color: '#2563eb' }}>Tek Akışta</span></h1>
+        <p style={{ color: '#64748b', fontSize: '15px', margin: '0 0 20px' }}>Reklamsız, tamamen bağımsız anlık haber takip radarı.</p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
           <button onClick={() => setAktifDilFiltresi('all')} style={{ padding: '6px 14px', borderRadius: '20px', border: '1px solid #e2e8f0', cursor: 'pointer', backgroundColor: aktifDilFiltresi === 'all' ? '#1e293b' : '#fff', color: aktifDilFiltresi === 'all' ? '#fff' : '#475569' }}>Tümü ({filtrelenmisHaberler.length})</button>
           <button onClick={() => setAktifDilFiltresi('tr')} style={{ padding: '6px 14px', borderRadius: '20px', border: '1px solid #e2e8f0', cursor: 'pointer', backgroundColor: aktifDilFiltresi === 'tr' ? '#1e293b' : '#fff', color: aktifDilFiltresi === 'tr' ? '#fff' : '#475569' }}>🇹🇷 Türkiye Basını</button>
