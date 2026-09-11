@@ -27,9 +27,9 @@ export const FALLBACK_SOURCES: FeedSource[] = [
   { id: "france24", name: "France 24", shortName: "F24", category: "Dünya", language: "en", feed: "https://www.france24.com/en/rss", site: "https://www.france24.com" }
 ];
 
-// Primary directory: multilingual, with Turkish + English feeds.
-// Secondary directory: larger international collection by language/topic/region.
+// Primary directory: multilingual and includes Turkish feeds.
+// Secondary directory: broader global collection of RSS/Atom news sources.
 export const FEED_DIRECTORY_URLS = [
   process.env.FEED_DIRECTORY_URL || "https://webisso.github.io/swipe-rss/feeds.opml",
-  process.env.GLOBAL_FEED_DIRECTORY_URL || "https://raw.githubusercontent.com/ajdelaguila/opml-news-feeds/main/dist/all-news-feeds.opml.xml"
+  process.env.GLOBAL_FEED_DIRECTORY_URL || "https://raw.githubusercontent.com/hashiverse/news-feeds/main/feeds.opml"
 ];
