@@ -86,7 +86,7 @@ export default function Home() {
     );
   }
 
-  const mansetHaberi = filtrelenmisHaberler[0];
+  const mansetHaberi = filtrelenmisHaberler[0] || null;
   const normalHaberler = filtrelenmisHaberler.slice(1, 46);
   return (
     <main style={{ backgroundColor: '#090d16', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', color: '#f1f5f9', margin: 0, paddingBottom: '60px' }}>
@@ -112,9 +112,9 @@ export default function Home() {
         <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '15px 20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
           <a href="/" style={{ fontSize: '24px', fontWeight: '900', color: '#fff', textDecoration: 'none' }}>HABER<span style={{ color: '#e11d48', backgroundColor: '#fff', padding: '2px 8px', borderRadius: '6px', marginLeft: '4px' }}>MEDYA</span></a>
           <div style={{ flex: '1', maxWidth: '380px' }}>
-            <input placeholder="Haber veya kaynak odaklı arama..." onChange={(e) => setAramaMetni(e.target.value)} style={{ width: '100%', padding: '10px 18px', backgroundColor: '#131e35', border: '1px solid #22314d', borderRadius: '12px', fontSize: '14px', color: '#fff', outline: 'none' }} />
+            <input placeholder="Haber veya kaynak odaklı arama..." onChange={(e) => setAramaMetni(e.target.value)} style={{ width: '100%', padding: '10px 18px', backgroundColor: '#131c2e', border: '1px solid #22314d', borderRadius: '12px', fontSize: '14px', color: '#fff', outline: 'none' }} />
           </div>
-          <div style={{ display: 'flex', gap: '4px', backgroundColor: '#131e35', padding: '4px', borderRadius: '12px' }}>
+          <div style={{ display: 'flex', gap: '4px', backgroundColor: '#131c2e', padding: '4px', borderRadius: '12px' }}>
             <button onClick={() => setCeviriAktif(true)} style={{ padding: '8px 16px', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: ceviriAktif ? '#e11d48' : 'transparent', color: '#fff' }}>✨ Türkçe Çeviri</button>
             <button onClick={() => setCeviriAktif(false)} style={{ padding: '8px 16px', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: !ceviriAktif ? '#1e293b' : 'transparent', color: '#94a3b8' }}>Orijinal</button>
           </div>
@@ -123,9 +123,9 @@ export default function Home() {
 
       <div style={{ maxWidth: '1300px', margin: '30px auto 0', padding: '0 20px' }}>
         <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid #1e293b', paddingBottom: '15px' }}>
-          <button onClick={() => setAktifDilFiltresi('all')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'all' ? '#e11d48' : '#131e35', color: '#fff' }}>Tümü ({filtrelenmisHaberler.length})</button>
-          <button onClick={() => setAktifDilFiltresi('tr')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'tr' ? '#e11d48' : '#131e35', color: '#fff' }}>🇹🇷 Türkiye</button>
-          <button onClick={() => setAktifDilFiltresi('en')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'en' ? '#e11d48' : '#131e35', color: '#fff' }}>🌍 Dünya</button>
+          <button onClick={() => setAktifDilFiltresi('all')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'all' ? '#e11d48' : '#131c2e', color: '#fff' }}>Tümü ({filtrelenmisHaberler.length})</button>
+          <button onClick={() => setAktifDilFiltresi('tr')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'tr' ? '#e11d48' : '#131c2e', color: '#fff' }}>🇹🇷 Türkiye</button>
+          <button onClick={() => setAktifDilFiltresi('en')} style={{ padding: '8px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', backgroundColor: aktifDilFiltresi === 'en' ? '#e11d48' : '#131c2e', color: '#fff' }}>🌍 Dünya</button>
         </div>
 
         {mansetHaberi && !aramaMetni && (
@@ -161,7 +161,7 @@ export default function Home() {
       </div>
 
       {seciliHaber && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(5, 8, 15, 0.85)', backdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '20px' }} onClick={() => setSeciliHaber(null)}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(5, 8, 17, 0.85)', backdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '20px' }} onClick={() => setSeciliHaber(null)}>
           <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '28px', maxWidth: '620px', width: '100%', maxHeight: '82vh', overflowY: 'auto', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ position: 'relative', width: '100%', height: '260px' }}>
               <img src={seciliHaber.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
